@@ -43,15 +43,17 @@ public class HomeServlet extends HttpServlet {
 			categorie.add(Xone);
 
 			request.getSession().setAttribute("categorie", categorie);
-			
-
-			
+				
 		}catch(SQLException e) {
 			e.printStackTrace();
 		}
 		
-		RequestDispatcher dispatcher = getServletContext().getRequestDispatcher("/" + redirectedPage);
-		dispatcher.forward(request, response);
+		if ("WEB-INF/web.xml".equals(redirectedPage) || "META-INF/context.xml".equals(redirectedPage)) {
+            response.sendRedirect(request.getContextPath());
+        } else {
+            RequestDispatcher dispatcher = getServletContext().getRequestDispatcher("/" + redirectedPage);
+            dispatcher.forward(request, response);
+        }
 	}
 
 
