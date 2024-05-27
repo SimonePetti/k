@@ -1,6 +1,7 @@
 package it.unisa.model;
 
 import java.sql.Connection;
+import java.util.List;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -143,7 +144,20 @@ public class ProdottoDao implements ProdottoDaoInterfaccia{
 		}
 		return (result != 0);
 	}
-
+	    
+	// Metodo per ottenere i nomi delle colonne della tabella   
+	public static List<String> getColumnNames(Connection connection, String tableName) throws SQLException {
+	        List<String> columnNames = new ArrayList<>();
+	        String query = "DESCRIBE " + tableName;
+	        try (PreparedStatement preparedStatement = connection.prepareStatement(query);
+	             ResultSet resultSet = preparedStatement.executeQuery()) {
+	            while (resultSet.next()) {
+	                columnNames.add(resultSet.getString("Field"));
+	            }
+	        }
+	        return columnNames;
+	   }
+	
 	@Override
 	public synchronized ArrayList<ProdottoBean> doRetrieveAll(String order) throws SQLException {
 		Connection connection = null;
@@ -154,7 +168,31 @@ public class ProdottoDao implements ProdottoDaoInterfaccia{
 		String selectSQL = "SELECT * FROM " + ProdottoDao.TABLE_NAME;
 
 		if (order != null && !order.equals("")) {
-			selectSQL += " ORDER BY " + order;
+			
+			List<String> validColumns = getColumnNames(connection, ProdottoDao.TABLE_NAME);
+
+	        // Split dell'input dell'utente in una lista
+	        String[] userColumnsArray = order.split(",");
+	        List<String> userColumns = new ArrayList<>();
+	        for (String col : userColumnsArray) {
+	            userColumns.add(col.trim());
+	        }
+
+	        // Verifica se i nomi delle colonne dell'utente sono validi
+	        List<String> invalidColumns = new ArrayList<>();
+	        for (String col : userColumns) {
+	            if (!validColumns.contains(col)) {
+	                invalidColumns.add(col);
+	            }
+	        }
+
+	        if (!invalidColumns.isEmpty()) {
+	            // Le colonne non sono valide, non fare nulla
+	        } else {
+	            // Costruisci l'ordine della query
+	            selectSQL += " ORDER BY " + order;
+	        }
+			
 		}
 
 		try {
